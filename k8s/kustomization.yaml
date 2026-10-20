@@ -1,0 +1,12 @@
+# O namespace "clima" e a permissão do runner são criados pelo repositório devops
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: clima
+labels:
+  - pairs:
+      app.kubernetes.io/name: clima-api
+    includeSelectors: true
+resources:
+  - deployment.yaml
+  - service.yaml
+  - servicemonitor.yaml
