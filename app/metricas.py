@@ -43,7 +43,9 @@ CONDICOES = Counter(
 FALHAS_OPEN_METEO = Counter(
     "clima_open_meteo_falhas_total",
     "Falhas ao consultar a Open-Meteo",
-    ["endpoint"],
+    # Não usar "endpoint": o Prometheus Operator já adiciona esse label
+    # (nome da porta) em todo alvo, e o da aplicação seria renomeado.
+    ["operacao"],
 )
 
 # Rotas de infraestrutura ficam fora para não poluir os gráficos
@@ -66,8 +68,8 @@ def inicializar(condicoes: list[str]) -> None:
     for status in ("200", "400", "404", "422", "502"):
         REQUISICOES.labels("GET", ROTA_CLIMA, status)
     DURACAO.labels("GET", ROTA_CLIMA)
-    for endpoint in ("geocodificacao", "previsao"):
-        FALHAS_OPEN_METEO.labels(endpoint)
+    for operacao in ("geocodificacao", "previsao"):
+        FALHAS_OPEN_METEO.labels(operacao)
 
 
 class MiddlewareMetricas(BaseHTTPMiddleware):

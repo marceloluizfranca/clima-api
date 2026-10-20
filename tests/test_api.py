@@ -104,7 +104,7 @@ async def test_open_meteo_fora_do_ar(cliente_api):
     assert r.status_code == 502
     async with cliente_api() as api:
         metricas = (await api.get("/metrics")).text
-    assert 'clima_open_meteo_falhas_total{endpoint="previsao"} 1.0' in metricas
+    assert 'clima_open_meteo_falhas_total{operacao="previsao"} 1.0' in metricas
 
 
 async def test_metricas_de_consulta(cliente_api):

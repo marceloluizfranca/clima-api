@@ -89,7 +89,7 @@ Métricas expostas:
 |---|---|---|
 | `clima_http_requisicoes_total` | counter | `metodo`, `rota`, `status` |
 | `clima_http_duracao_segundos` | histogram | `metodo`, `rota` |
-| `clima_open_meteo_falhas_total` | counter | `endpoint` |
+| `clima_open_meteo_falhas_total` | counter | `operacao` (`geocodificacao` ou `previsao`) |
 | `clima_consultas_total` | counter | `tipo` (`cidade` ou `coordenadas`) |
 | `clima_consultas_por_cidade_total` | counter | `cidade`, `pais` |
 | `clima_condicoes_total` | counter | `condicao` |

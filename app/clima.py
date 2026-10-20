@@ -72,14 +72,14 @@ class ClienteOpenMeteo:
     def __init__(self, http: httpx.AsyncClient):
         self.http = http
 
-    async def _get(self, endpoint: str, url: str, params: dict) -> dict:
+    async def _get(self, operacao: str, url: str, params: dict) -> dict:
         try:
             resposta = await self.http.get(url, params=params)
             resposta.raise_for_status()
             return resposta.json()
         except (httpx.HTTPError, ValueError) as erro:
-            FALHAS_OPEN_METEO.labels(endpoint=endpoint).inc()
-            raise ErroOpenMeteo(f"falha ao consultar {endpoint}: {erro}") from erro
+            FALHAS_OPEN_METEO.labels(operacao=operacao).inc()
+            raise ErroOpenMeteo(f"falha ao consultar {operacao}: {erro}") from erro
 
     async def geocodificar(self, cidade: str) -> Local:
         dados = await self._get(

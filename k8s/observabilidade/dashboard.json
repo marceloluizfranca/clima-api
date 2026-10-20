@@ -842,8 +842,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (endpoint) (increase(clima_open_meteo_falhas_total[$__rate_interval]))",
-          "legendFormat": "{{endpoint}}",
+          "expr": "sum by (operacao) (increase(clima_open_meteo_falhas_total[$__rate_interval]))",
+          "legendFormat": "{{operacao}}",
           "refId": "A"
         }
       ],
