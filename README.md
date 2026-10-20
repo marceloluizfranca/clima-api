@@ -90,6 +90,19 @@ Métricas expostas:
 | `clima_http_requisicoes_total` | counter | `metodo`, `rota`, `status` |
 | `clima_http_duracao_segundos` | histogram | `metodo`, `rota` |
 | `clima_open_meteo_falhas_total` | counter | `endpoint` |
+| `clima_consultas_total` | counter | `tipo` (`cidade` ou `coordenadas`) |
+| `clima_consultas_por_cidade_total` | counter | `cidade`, `pais` |
+| `clima_condicoes_total` | counter | `condicao` |
+
+As séries conhecidas (tipos de consulta, condições, códigos de resposta) começam em zero quando a API sobe. Sem isso, o Prometheus não conta a primeira ocorrência de cada série em `rate()` e `increase()`. A cidade vem do nome devolvido pela geocodificação, então variações de digitação contam como a mesma cidade.
+
+O dashboard "Clima API" mostra:
+
+- **Visão geral:** consultas no período, cidades distintas, requisições/s, taxa de sucesso, latência p95 e réplicas.
+- **Acessos:** consultas por minuto, cidade x coordenadas, cidades mais buscadas, condições do tempo retornadas e códigos de resposta.
+- **Desempenho:** requisições por status, latência p50/p95/p99, falhas na Open-Meteo e respostas com erro.
+
+Um link no topo leva ao dashboard "Recursos dos pods" da plataforma, já filtrado no namespace `clima`.
 
 Alertas:
 

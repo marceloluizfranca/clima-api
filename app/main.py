@@ -8,8 +8,9 @@ import httpx
 from fastapi import FastAPI, HTTPException, Query, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
-from app.clima import CidadeNaoEncontrada, ClienteOpenMeteo, ErroOpenMeteo, Local
-from app.metricas import MiddlewareMetricas
+from app.clima import CONDICOES_WMO, CidadeNaoEncontrada, ClienteOpenMeteo, ErroOpenMeteo, Local
+from app import metricas
+from app.metricas import CONDICOES, CONSULTAS, CONSULTAS_POR_CIDADE, MiddlewareMetricas
 
 VERSAO = os.getenv("APP_VERSION", "dev")
 
@@ -28,10 +29,11 @@ app = FastAPI(
     lifespan=ciclo_de_vida,
 )
 app.add_middleware(MiddlewareMetricas)
+metricas.inicializar([*CONDICOES_WMO.values(), "Desconhecida"])
 
 
 @app.get("/metrics", include_in_schema=False)
-async def metricas():
+async def expor_metricas():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
@@ -63,8 +65,14 @@ async def clima_hoje(
     cliente: ClienteOpenMeteo = request.app.state.open_meteo
     try:
         local = await cliente.geocodificar(cidade) if cidade else Local(latitude=lat, longitude=lon)
-        return await cliente.previsao_hoje(local)
+        previsao = await cliente.previsao_hoje(local)
     except CidadeNaoEncontrada:
         raise HTTPException(404, f"Cidade '{cidade}' não encontrada.")
     except ErroOpenMeteo:
         raise HTTPException(502, "Serviço de previsão indisponível no momento.")
+
+    CONSULTAS.labels("cidade" if cidade else "coordenadas").inc()
+    if cidade:
+        CONSULTAS_POR_CIDADE.labels(local.nome or "", local.pais or "").inc()
+    CONDICOES.labels(previsao["condicao"]).inc()
+    return previsao

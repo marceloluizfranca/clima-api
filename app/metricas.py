@@ -19,6 +19,27 @@ DURACAO = Histogram(
     buckets=(0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10),
 )
 
+CONSULTAS = Counter(
+    "clima_consultas_total",
+    "Consultas de previsão respondidas com sucesso",
+    ["tipo"],
+)
+
+# A cidade vem do resultado da geocodificação (nome oficial), e não do texto
+# digitado, para "recife", "Recife " e "RECIFE" contarem como a mesma cidade
+# e a cardinalidade ficar limitada às cidades que existem.
+CONSULTAS_POR_CIDADE = Counter(
+    "clima_consultas_por_cidade_total",
+    "Consultas de previsão por cidade",
+    ["cidade", "pais"],
+)
+
+CONDICOES = Counter(
+    "clima_condicoes_total",
+    "Condição do tempo retornada nas consultas",
+    ["condicao"],
+)
+
 FALHAS_OPEN_METEO = Counter(
     "clima_open_meteo_falhas_total",
     "Falhas ao consultar a Open-Meteo",
@@ -27,6 +48,26 @@ FALHAS_OPEN_METEO = Counter(
 
 # Rotas de infraestrutura ficam fora para não poluir os gráficos
 ROTAS_IGNORADAS = {"/metrics", "/healthz", "/readyz"}
+
+ROTA_CLIMA = "/v1/clima/hoje"
+
+
+def inicializar(condicoes: list[str]) -> None:
+    """Cria as séries conhecidas com valor zero.
+
+    O Prometheus não conta a primeira ocorrência de uma série em rate() e
+    increase(), porque ela já nasce com valor 1. Começando em zero, a
+    primeira consulta já aparece nos gráficos.
+    """
+    for tipo in ("cidade", "coordenadas"):
+        CONSULTAS.labels(tipo)
+    for condicao in condicoes:
+        CONDICOES.labels(condicao)
+    for status in ("200", "400", "404", "422", "502"):
+        REQUISICOES.labels("GET", ROTA_CLIMA, status)
+    DURACAO.labels("GET", ROTA_CLIMA)
+    for endpoint in ("geocodificacao", "previsao"):
+        FALHAS_OPEN_METEO.labels(endpoint)
 
 
 class MiddlewareMetricas(BaseHTTPMiddleware):

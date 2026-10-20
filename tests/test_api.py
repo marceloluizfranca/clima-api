@@ -1,5 +1,6 @@
 import httpx
 import pytest
+from prometheus_client import REGISTRY
 
 from app.clima import URL_GEOCODIFICACAO, ClienteOpenMeteo
 from app.main import app
@@ -103,4 +104,26 @@ async def test_open_meteo_fora_do_ar(cliente_api):
     assert r.status_code == 502
     async with cliente_api() as api:
         metricas = (await api.get("/metrics")).text
-    assert 'clima_open_meteo_falhas_total{endpoint="previsao"}' in metricas
+    assert 'clima_open_meteo_falhas_total{endpoint="previsao"} 1.0' in metricas
+
+
+async def test_metricas_de_consulta(cliente_api):
+    def valor(nome, **labels):
+        return REGISTRY.get_sample_value(nome, labels) or 0
+
+    antes_recife = valor("clima_consultas_por_cidade_total", cidade="Recife", pais="Brasil")
+    antes_coord = valor("clima_consultas_total", tipo="coordenadas")
+    async with cliente_api() as api:
+        await api.get("/v1/clima/hoje", params={"cidade": "recife"})
+        await api.get("/v1/clima/hoje", params={"cidade": "Recife"})
+        await api.get("/v1/clima/hoje", params={"lat": -8.05, "lon": -34.9})
+    # O nome vem da geocodificação, então "recife" e "Recife" contam juntas
+    assert valor("clima_consultas_por_cidade_total", cidade="Recife", pais="Brasil") == antes_recife + 2
+    assert valor("clima_consultas_total", tipo="coordenadas") == antes_coord + 1
+
+
+async def test_series_iniciam_zeradas(cliente_api):
+    async with cliente_api() as api:
+        metricas = (await api.get("/metrics")).text
+    assert 'clima_condicoes_total{condicao="Trovoada"} 0.0' in metricas
+    assert 'clima_http_requisicoes_total{metodo="GET",rota="/v1/clima/hoje",status="502"}' in metricas
