@@ -10,8 +10,8 @@ labels:
 resources:
   - deployment.yaml
   - service.yaml
-  - servicemonitor.yaml
-  - observabilidade/alertas.yaml
+  #- servicemonitor.yaml
+  #- observabilidade/alertas.yaml
 # O Grafana carrega qualquer ConfigMap com o label grafana_dashboard=1
 configMapGenerator:
   - name: clima-api-dashboard
