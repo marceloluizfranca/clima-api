@@ -3,6 +3,10 @@ kind: ServiceMonitor
 metadata:
   name: clima-api
 spec:
+  # O kustomize não preenche o selector de CRDs, então ele é declarado aqui
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: clima-api
   endpoints:
     - port: http
       path: /metrics
