@@ -1,0 +1,21 @@
+[project]
+name = "clima-api"
+version = "0.1.0"
+description = "API que retorna a previsão do tempo do dia por cidade ou coordenadas"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.151.0",
+    "httpx>=0.28.1",
+    "prometheus-client>=0.26.0",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
