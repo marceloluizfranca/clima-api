@@ -58,7 +58,7 @@ O workflow `.github/workflows/ci-cd.yaml` tem três jobs:
 
 1. **testes**: roda o pytest em todo push e pull request.
 2. **imagem**: em push na `main` ou em tag `vX.Y.Z`, gera a imagem arm64 e publica em `ghcr.io/marceloluizfranca/clima-api` com as tags `sha-<commit>`, `latest` e a versão semver.
-3. **deploy**: roda no runner self-hosted `arc-splic`, que fica **dentro** do cluster kind. Aplica `k8s/` com a imagem do commit e espera o rollout terminar.
+3. **deploy**: roda no runner self-hosted `arc-splic`, que fica **dentro** do cluster kind. Aplica `k8s/` com a imagem gerada no job anterior, referenciada pela digest (imutável), e espera o rollout terminar.
 
 O runner usa a ServiceAccount do próprio pod, com permissão apenas no namespace `clima`. Não há kubeconfig guardado em secret.
 

@@ -29,6 +29,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3
@@ -45,7 +47,8 @@ jobs:
             type=sha,prefix=sha-
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
-      - uses: docker/build-push-action@v6
+      - id: build
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/arm64
@@ -64,14 +67,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: azure/setup-kubectl@v4
-      - name: Aplica os manifests com a imagem deste commit
+      - name: Aplica os manifests com a imagem deste build
+        env:
+          # A digest é imutável: garante que roda exatamente a imagem gerada
+          # no job anterior, mesmo que alguma tag seja reescrita depois
+          DIGEST: ${{ needs.imagem.outputs.digest }}
         run: |
           # O kubectl usa a ServiceAccount do pod do runner, sem kubeconfig
-          TAG="sha-${GITHUB_SHA::7}"
           cat >> k8s/kustomization.yaml <<FIM
           images:
             - name: ${IMAGEM}
-              newTag: ${TAG}
+              digest: ${DIGEST}
           FIM
           kubectl apply -k k8s/
       - name: Aguarda o rollout
