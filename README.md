@@ -20,6 +20,8 @@ Exemplo:
 curl "localhost:30080/v1/clima/hoje?cidade=Recife"
 ```
 
+No cluster, o Service da API é interno (`ClusterIP`). O acesso externo passa pelo nginx da [clima-web](https://github.com/marceloluizfranca/clima-web), que serve a interface em `localhost:30080` e encaminha `/v1`, `/docs` e `/readyz` para a API.
+
 ```json
 {
   "local": {"nome": "Recife", "estado": "Pernambuco", "pais": "Brasil", "latitude": -8.05389, "longitude": -34.88111, "fuso_horario": "America/Recife"},

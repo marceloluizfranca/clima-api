@@ -3,10 +3,9 @@ kind: Service
 metadata:
   name: clima-api
 spec:
-  type: NodePort
+  # Interno ao cluster: o acesso externo é feito pelo nginx da clima-web
+  type: ClusterIP
   ports:
     - name: http
       port: 80
       targetPort: http
-      # Mapeada para localhost:30080 na configuração do kind
-      nodePort: 30080
