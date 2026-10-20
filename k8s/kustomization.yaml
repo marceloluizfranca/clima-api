@@ -1,4 +1,5 @@
-# O namespace "clima" e a permissão do runner são criados pelo repositório devops
+# O namespace "clima" e as permissões do runner são criados na integração
+# com a plataforma (ver README).
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: clima
@@ -10,3 +11,15 @@ resources:
   - deployment.yaml
   - service.yaml
   - servicemonitor.yaml
+  - observabilidade/alertas.yaml
+# O Grafana carrega qualquer ConfigMap com o label grafana_dashboard=1
+configMapGenerator:
+  - name: clima-api-dashboard
+    files:
+      - clima-api.json=observabilidade/dashboard.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"
+      annotations:
+        grafana_folder: Aplicações

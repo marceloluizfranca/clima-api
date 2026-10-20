@@ -58,7 +58,45 @@ O workflow `.github/workflows/ci-cd.yaml` tem três jobs:
 2. **imagem**: em push na `main` ou em tag `vX.Y.Z`, gera a imagem arm64 e publica em `ghcr.io/marceloluizfranca/clima-api` com as tags `sha-<commit>`, `latest` e a versão semver.
 3. **deploy**: roda no runner self-hosted `arc-splic`, que fica **dentro** do cluster kind. Aplica `k8s/` com a imagem do commit e espera o rollout terminar.
 
-O runner usa a ServiceAccount do próprio pod, com permissão apenas no namespace `clima`. Não há kubeconfig guardado em secret. O runner, o namespace e a stack de monitoramento são instalados pelo repositório [devops](https://github.com/marceloluizfranca/devops).
+O runner usa a ServiceAccount do próprio pod, com permissão apenas no namespace `clima`. Não há kubeconfig guardado em secret.
+
+## Integração com a plataforma
+
+O cluster, os runners e a stack de monitoramento são mantidos no repositório [devops](https://github.com/marceloluizfranca/devops). Esta aplicação foi integrada seguindo o guia [Adicionar um repositório](https://github.com/marceloluizfranca/devops/blob/main/github-runners/README.md#adicionar-um-repositório), com:
+
+| Variável | Valor |
+|---|---|
+| `REPO` | `clima-api` |
+| `DONO` | `marceloluizfranca` |
+| `NAMESPACE` | `clima` |
+| `SCALE_SET` | `arc-splic` |
+
+## Observabilidade
+
+O monitoramento é declarado junto com a aplicação e aplicado pelo mesmo deploy:
+
+| Arquivo | O que faz |
+|---|---|
+| `k8s/servicemonitor.yaml` | Prometheus coleta `/metrics` a cada 15s |
+| `k8s/observabilidade/alertas.yaml` | Regras de alerta (`PrometheusRule`) |
+| `k8s/observabilidade/dashboard.json` | Dashboard "Clima API" no Grafana, pasta *Aplicações* |
+
+Métricas expostas:
+
+| Métrica | Tipo | Labels |
+|---|---|---|
+| `clima_http_requisicoes_total` | counter | `metodo`, `rota`, `status` |
+| `clima_http_duracao_segundos` | histogram | `metodo`, `rota` |
+| `clima_open_meteo_falhas_total` | counter | `endpoint` |
+
+Alertas:
+
+| Alerta | Condição |
+|---|---|
+| `ClimaApiTaxaDeErroAlta` | Mais de 5% de respostas 5xx por 5 min |
+| `ClimaApiOpenMeteoFalhando` | Mais de 5 falhas na Open-Meteo em 5 min |
+| `ClimaApiLatenciaAlta` | p95 acima de 2s por 10 min |
+| `ClimaApiSemReplicas` | Nenhuma réplica disponível por 2 min |
 
 ## Versionamento
 

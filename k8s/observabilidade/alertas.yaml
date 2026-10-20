@@ -1,0 +1,42 @@
+# Alertas da clima-api
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: clima-api
+spec:
+  groups:
+    - name: clima-api
+      rules:
+        - alert: ClimaApiTaxaDeErroAlta
+          expr: |
+            sum(rate(clima_http_requisicoes_total{status=~"5.."}[5m]))
+              / sum(rate(clima_http_requisicoes_total[5m])) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Mais de 5% das requisições da clima-api estão falhando
+        - alert: ClimaApiOpenMeteoFalhando
+          expr: sum(increase(clima_open_meteo_falhas_total[5m])) > 5
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: A clima-api está com falhas frequentes ao consultar a Open-Meteo
+        - alert: ClimaApiLatenciaAlta
+          expr: |
+            histogram_quantile(0.95,
+              sum by (le) (rate(clima_http_duracao_segundos_bucket{rota="/v1/clima/hoje"}[5m]))
+            ) > 2
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: O p95 de latência da clima-api está acima de 2s
+        - alert: ClimaApiSemReplicas
+          expr: kube_deployment_status_replicas_available{namespace="clima", deployment="clima-api"} < 1
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: Nenhuma réplica da clima-api disponível
